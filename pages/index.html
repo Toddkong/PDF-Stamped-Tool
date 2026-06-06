@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本地PDF盖章小工具</title>
+    <link rel="stylesheet" href="../styles/main.css">
+</head>
+<body>
+        <!-- 顶栏 -->
+        <div class="header-bar">
+            <a href="index.html" class="logo">PDF盖章小工具</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="pdf-editor.html" class="nav-link">去盖章</a>
+                <a href="signature-manager.html" class="nav-link">管理签章</a>
+            </div>
+        </div>
+        
+        <div class="container">
+        <header>
+            <h1>本地PDF盖章小工具</h1>
+            <p>快速、安全的本地PDF文档盖章解决方案</p>
+        </header>
+        
+        <main>
+            <section class="intro">
+                <h2>功能特点</h2>
+                <div class="features">
+                    <div class="feature-item">
+                        <h3>📄 PDF文档处理</h3>
+                        <p>支持本地PDF文件上传、预览和编辑</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>✍️ 签章管理</h3>
+                        <p>上传、保存和管理个人签章图片</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>🎯 精确盖章</h3>
+                        <p>拖拽定位、调整大小，支持单页或批量盖章</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>💾 本地导出</h3>
+                        <p>所有操作在本地完成，确保文档安全</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="upload-section">
+                <h2>开始使用</h2>
+                <div class="upload-container">
+                    <input type="file" id="pdfFile" accept=".pdf" style="display: none;">
+                    <label for="pdfFile" class="upload-btn">
+                        <span>📁 选择PDF文件</span>
+                    </label>
+                    <p class="hint">支持PDF格式文件，大小不超过50MB</p>
+                </div>
+            </section>
+            
+            <section class="quick-links">
+                <h2>快速导航</h2>
+                <div class="links-container">
+                    <a href="signature-manager.html" class="link-btn">
+                        <span>⚙️ 管理签章</span>
+                    </a>
+                    <a href="pdf-editor.html" class="link-btn">
+                        <span>✏️ 去盖章</span>
+                    </a>
+                </div>
+            </section>
+            
+            <section class="signatures-section">
+                <h2>已有签章</h2>
+                <div id="signatures-container">
+                    <p class="no-signatures">暂无签章</p>
+                </div>
+            </section>
+            
+            <section class="history-section">
+                <h2>盖章历史记录</h2>
+                <div id="history-container">
+                    <p class="no-history">暂无盖章历史记录</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2024 本地PDF盖章小工具 - 所有操作均在本地完成，保护您的隐私安全</p>
+        </footer>
+    </div>
+    
+    <!-- 引入数据库服务 -->
+    <script src="../js/database-service.js"></script>
+    
+    <script>
+        // 监听文件选择
+        document.getElementById('pdfFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // 保存文件到localStorage（临时存储）
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const dataUrl = e.target.result;
+                    const originalFileName = file.name;
+                    
+                    // 将PDF数据URL和原始文件名保存到localStorage
+                    localStorage.setItem('currentPdfDataUrl', dataUrl);
+                    localStorage.setItem('originalPdfFileName', originalFileName);
+                    
+                    // 跳转到去盖章页面
+                    window.location.href = 'pdf-editor.html';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // 加载盖章历史记录
+        async function loadHistory() {
+            try {
+                const dbService = new DatabaseService();
+                await dbService.init();
+                
+                const documents = await dbService.getAllSignedDocuments();
+                const historyContainer = document.getElementById('history-container');
+                
+                if (documents.length === 0) {
+                    historyContainer.innerHTML = '<p class="no-history">暂无盖章历史记录</p>';
+                    return;
+                }
+                
+                // 按创建时间倒序排列
+                documents.sort((a, b) => b.createdAt - a.createdAt);
+                
+                const historyHTML = documents.map(doc => {
+                    const date = new Date(doc.createdAt).toLocaleString();
+                    const format = doc.format || 'PDF';
+                    // 使用原始文件名，如果没有则使用生成的文件名
+                    const displayName = doc.originalName || doc.name;
+                    return `
+                        <div class="history-item">
+                            <div class="history-info">
+                                <h4>${displayName}</h4>
+                                <p class="history-meta">
+                                    <span>📅 ${date}</span>
+                                    <span>📄 ${format}</span>
+                                </p>
+                            </div>
+                            <div class="history-actions">
+                                <button class="download-btn" onclick="downloadDocument('${doc.id}', '${doc.name}', '${format}')">
+                                    📥 下载
+                                </button>
+                                <button class="delete-btn" onclick="deleteDocument('${doc.id}', '${displayName}')">
+                                    🗑️ 删除
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                historyContainer.innerHTML = historyHTML;
+            } catch (error) {
+                console.error('加载历史记录失败:', error);
+            }
+        }
+        
+        // 下载文档
+        async function downloadDocument(id, name, format) {
+            try {
+                const dbService = new DatabaseService();
+                await dbService.init();
+                
+                const documents = await dbService.getAllSignedDocuments();
+                const doc = documents.find(d => d.id === id);
+                
+                if (doc) {
+                    const blob = new Blob([doc.data], { type: getMimeType(format) });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${name.replace(/\.[^/.]+$/, '')}.${format.toLowerCase()}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            } catch (error) {
+                console.error('下载文档失败:', error);
+                alert('下载失败，请稍后重试');
+            }
+        }
+        
+        // 删除文档
+        async function deleteDocument(id, name) {
+            if (confirm(`确定要删除文档 "${name}" 吗？`)) {
+                try {
+                    const dbService = new DatabaseService();
+                    await dbService.init();
+                    
+                    await dbService.deleteSignedDocument(id);
+                    loadHistory(); // 重新加载历史记录
+                } catch (error) {
+                    console.error('删除文档失败:', error);
+                    alert('删除失败，请稍后重试');
+                }
+            }
+        }
+        
+        // 获取文件MIME类型
+        function getMimeType(format) {
+            switch (format.toLowerCase()) {
+                case 'pdf':
+                    return 'application/pdf';
+                case 'jpg':
+                case 'jpeg':
+                    return 'image/jpeg';
+                case 'png':
+                    return 'image/png';
+                default:
+                    return 'application/octet-stream';
+            }
+        }
+        
+        // 加载已有签章
+        async function loadSignatures() {
+            try {
+                const dbService = new DatabaseService();
+                await dbService.init();
+                
+                const signatures = await dbService.getAllSignatures();
+                const signaturesContainer = document.getElementById('signatures-container');
+                
+                if (signatures.length === 0) {
+                    signaturesContainer.innerHTML = '<p class="no-signatures">暂无签章</p>';
+                    return;
+                }
+                
+                // 按创建时间倒序排列
+                signatures.sort((a, b) => b.createdAt - a.createdAt);
+                
+                const signaturesHTML = signatures.map(sig => {
+                    const date = new Date(sig.createdAt).toLocaleString();
+                    return `
+                        <div class="signature-item">
+                            <img src="${sig.dataUrl}" alt="${sig.name}" class="signature-preview">
+                            <div class="signature-details">
+                                <h4>${sig.name}</h4>
+                                <p class="signature-date">📅 ${date}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                signaturesContainer.innerHTML = signaturesHTML;
+            } catch (error) {
+                console.error('加载签章失败:', error);
+            }
+        }
+        
+        // 页面加载完成后加载历史记录和签章
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHistory();
+            loadSignatures();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>签章管理 - 本地PDF盖章小工具</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        /* 新的签章管理样式 */
+        .signature-manager-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 上传区域 */
+        .upload-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 30px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-section h2 {
+            margin-bottom: 20px;
+            color: white;
+            border-bottom: none;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            padding: 30px;
+            margin: 0 auto 20px;
+            max-width: 600px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .upload-area.dragover {
+            border-color: white;
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.02);
+        }
+
+        .upload-area .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-area p {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .upload-area small {
+            display: block;
+            margin-top: 10px;
+            opacity: 0.8;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* 预览和表单 */
+        .preview-form-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            align-items: flex-start;
+            margin-top: 30px;
+        }
+
+        .signature-preview {
+            flex: 0 0 200px;
+            height: 200px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .signature-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .signature-form {
+            flex: 1;
+            min-width: 300px;
+            max-width: 400px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
+        }
+
+        .file-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        /* 签章库 */
+        .library-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .library-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-box {
+            position: relative;
+            max-width: 300px;
+            width: 100%;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-box .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        /* 签章列表 */
+        .signature-list {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 20px;
+            overflow-x: auto;
+            padding: 10px 0;
+            scrollbar-width: thin;
+            scrollbar-color: #667eea #f5f5f5;
+        }
+
+        .signature-list::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .signature-list::-webkit-scrollbar-track {
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+
+        .signature-list::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        .signature-item {
+            flex: 0 0 220px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .signature-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .signature-item .preview {
+            height: 180px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .signature-item .preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .signature-item .info {
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .signature-item .name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .signature-item .date {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 15px;
+        }
+
+        .signature-item .actions {
+            margin-top: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .upload-section {
+                padding: 20px;
+            }
+
+            .library-section {
+                padding: 20px;
+            }
+
+            .library-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                max-width: 100%;
+            }
+
+            .preview-form-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .signature-preview {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶栏 -->
+    <div class="header-bar">
+        <a href="index.html" class="logo">PDF盖章小工具</a>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">首页</a>
+            <a href="pdf-editor.html" class="nav-link">去盖章</a>
+            <a href="signature-manager.html" class="nav-link">管理签章</a>
+        </div>
+    </div>
+    
+    <div class="signature-manager-container">
+        <!-- 上传区域 -->
+        <section class="upload-section">
+            <h2>添加新签章</h2>
+            <div class="upload-area" id="uploadArea">
+                <div class="icon">📁</div>
+                <p>点击或拖拽签章图片到此处上传</p>
+                <small>支持 PNG、JPG、JPEG、GIF 格式，建议尺寸不超过 500x500px</small>
+                <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.gif">
+            </div>
+            
+            <div class="preview-form-container" id="previewFormContainer" style="display: none;">
+                <div class="signature-preview" id="signaturePreview">
+                    <span>预览将显示在这里</span>
+                </div>
+                
+                <div class="signature-form">
+                    <div class="form-group">
+                        <label for="signatureName">签章名称</label>
+                        <input type="text" id="signatureName" placeholder="给你的签章起个名字">
+                    </div>
+                    
+                    <div class="file-info" id="fileInfo"></div>
+                    
+                    <button id="saveSignatureBtn" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 16px;">保存签章</button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 签章库 -->
+        <section class="library-section">
+            <div class="library-header">
+                <h2>我的签章库</h2>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="搜索签章名称...">
+                    <span class="search-icon">🔍</span>
+                </div>
+            </div>
+            
+            <div class="signature-list" id="signatureList">
+                <!-- 签章项将通过JS动态生成 -->
+            </div>
+        </section>
+    </div>
+    
+    <script src="../js/database-service.js"></script>
+    <script src="../js/signature-service.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const signatureService = new SignatureService();
+            
+            // DOM 元素
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const previewFormContainer = document.getElementById('previewFormContainer');
+            const signaturePreview = document.getElementById('signaturePreview');
+            const signatureName = document.getElementById('signatureName');
+            const fileInfo = document.getElementById('fileInfo');
+            const saveSignatureBtn = document.getElementById('saveSignatureBtn');
+            const signatureList = document.getElementById('signatureList');
+            const searchInput = document.getElementById('searchInput');
+            
+            // 状态变量
+            let currentFile = null;
+            let currentFileDataUrl = null;
+            let allSignatures = [];
+            
+            // 初始化
+            loadSignatures();
+            
+            // 上传区域事件
+            uploadArea.addEventListener('click', () => fileInput.click());
+            
+            // 拖拽事件
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+            
+            // 文件选择事件
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+            
+            // 处理文件
+            function handleFile(file) {
+                // 验证文件类型
+                const validTypes = ['image/png', 'image/jpeg', 'image/gif'];
+                if (!validTypes.includes(file.type)) {
+                    alert('请选择 PNG、JPG、JPEG 或 GIF 格式的图片！');
+                    return;
+                }
+                
+                // 验证文件大小（最大 5MB）
+                const maxSize = 5 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    alert('图片大小不能超过 5MB！');
+                    return;
+                }
+                
+                currentFile = file;
+                
+                // 读取文件并显示预览
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    currentFileDataUrl = e.target.result;
+                    signaturePreview.innerHTML = `<img src="${currentFileDataUrl}" alt="签章预览">`;
+                    
+                    // 显示表单和预览
+                    previewFormContainer.style.display = 'flex';
+                    
+                    // 显示文件信息
+                    fileInfo.innerHTML = `
+                        <strong>文件名:</strong> ${file.name}<br>
+                        <strong>大小:</strong> ${formatFileSize(file.size)}<br>
+                        <strong>类型:</strong> ${file.type}
+                    `;
+                    
+                    // 自动填充签章名称
+                    const defaultName = file.name.replace(/\.[^/.]+$/, '');
+                    signatureName.value = defaultName;
+                    
+                    // 检查保存按钮状态
+                    checkSaveButton();
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            // 名称输入事件
+            signatureName.addEventListener('input', checkSaveButton);
+            
+            // 检查保存按钮状态
+            function checkSaveButton() {
+                if (currentFileDataUrl && signatureName.value.trim()) {
+                    saveSignatureBtn.disabled = false;
+                } else {
+                    saveSignatureBtn.disabled = true;
+                }
+            }
+            
+            // 保存签章
+            saveSignatureBtn.addEventListener('click', async () => {
+                if (!currentFileDataUrl || !signatureName.value.trim()) {
+                    alert('请填写完整信息！');
+                    return;
+                }
+                
+                const signature = {
+                    name: signatureName.value.trim(),
+                    dataUrl: currentFileDataUrl,
+                    createdAt: Date.now()
+                };
+                
+                try {
+                    await signatureService.saveSignature(signature);
+                    alert('签章保存成功！');
+                    
+                    // 重置表单
+                    resetForm();
+                    
+                    // 重新加载签章列表
+                    loadSignatures();
+                } catch (error) {
+                    console.error('保存签章失败:', error);
+                    alert('保存签章失败，请重试！');
+                }
+            });
+            
+            // 重置表单
+            function resetForm() {
+                currentFile = null;
+                currentFileDataUrl = null;
+                fileInput.value = '';
+                signatureName.value = '';
+                signaturePreview.innerHTML = '<span>预览将显示在这里</span>';
+                fileInfo.innerHTML = '';
+                previewFormContainer.style.display = 'none';
+                saveSignatureBtn.disabled = true;
+            }
+            
+            // 加载签章列表
+            async function loadSignatures() {
+                try {
+                    allSignatures = await signatureService.loadSignatures();
+                    renderSignatures(allSignatures);
+                } catch (error) {
+                    console.error('加载签章失败:', error);
+                    signatureList.innerHTML = '<div class="empty-state"><div class="icon">❌</div><h3>加载失败</h3><p>无法加载签章列表，请刷新页面重试</p></div>';
+                }
+            }
+            
+            // 渲染签章列表
+            function renderSignatures(signatures) {
+                if (signatures.length === 0) {
+                    signatureList.innerHTML = '<div class="empty-state"><div class="icon">📭</div><h3>签章库为空</h3><p>点击上方按钮添加第一个签章</p></div>';
+                    return;
+                }
+                
+                signatureList.innerHTML = signatures.map(signature => `
+                    <div class="signature-item">
+                        <div class="preview">
+                            <img src="${signature.dataUrl}" alt="${signature.name}">
+                        </div>
+                        <div class="info">
+                            <div class="name">${signature.name}</div>
+                            <div class="date">${new Date(signature.createdAt).toLocaleString()}</div>
+                            <div class="actions">
+                                <button class="btn btn-primary" onclick="useSignature('${signature.id}')">使用</button>
+                                <button class="btn btn-danger" onclick="deleteSignature('${signature.id}')">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // 搜索功能
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const filteredSignatures = allSignatures.filter(signature => 
+                    signature.name.toLowerCase().includes(searchTerm)
+                );
+                renderSignatures(filteredSignatures);
+            });
+            
+            // 使用签章（可扩展功能）
+            window.useSignature = function(id) {
+                // 这里可以实现跳转到去盖章页面并自动选择该签章
+                alert(`将使用签章 ID: ${id}`);
+                // 示例：跳转到去盖章页面并传递签章ID
+                // window.location.href = `pdf-editor.html?signatureId=${id}`;
+            };
+            
+            // 删除签章
+            window.deleteSignature = async function(id) {
+                if (!confirm('确定要删除这个签章吗？删除后无法恢复！')) {
+                    return;
+                }
+                
+                try {
+                    await signatureService.deleteSignature(id);
+                    await loadSignatures();
+                    alert('签章删除成功！');
+                } catch (error) {
+                    console.error('删除签章失败:', error);
+                    alert('删除签章失败，请重试！');
+                }
+            };
+            
+            // 格式化文件大小
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+        });
+    </script>
+</body>
+</html>

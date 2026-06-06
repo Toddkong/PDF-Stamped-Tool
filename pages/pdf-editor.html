@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>去盖章 - 本地PDF盖章小工具</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        /* 操作按钮区域样式 */
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: nowrap;
+        }
+        
+        /* 区域头部样式 */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        /* 小尺寸按钮样式 */
+        .small-btn {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+    </style>
+    <!-- 引入PDF.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+    <!-- 引入jsPDF库用于PDF导出 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+        <!-- 顶栏 -->
+        <div class="header-bar">
+            <a href="index.html" class="logo">PDF盖章小工具</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="pdf-editor.html" class="nav-link">去盖章</a>
+                <a href="signature-manager.html" class="nav-link">管理签章</a>
+            </div>
+        </div>
+        
+        <div class="container">
+        <header>
+            <h1>去盖章</h1>
+            <nav>
+                <a href="index.html" class="nav-btn">首页</a>
+                <a href="signature-manager.html" class="nav-btn">管理签章</a>
+            </nav>
+        </header>
+        
+        <main>
+            <div class="editor-layout">
+                <!-- 左侧工具栏 -->
+                <aside class="tool-panel">
+                    <section class="pdf-upload">
+                        <div class="pdf-section-header">
+                            <h3>上传PDF</h3>
+                            <button id="uploadPdfBtn" class="primary-btn small-btn">选择PDF文件</button>
+                            <input type="file" id="pdfFileInput" accept=".pdf" style="display: none;">
+                        </div>
+                    </section>
+                    
+                    <section class="pdf-signature-selector">
+                        <div class="pdf-section-header">
+                            <h3>选择签章</h3>
+                            <button id="addSignatureBtn" class="primary-btn small-btn">添加新签章</button>
+                            <input type="file" id="signatureFileInput" accept="image/*" style="display: none;">
+                        </div>
+                        <div class="signature-filter">
+                            <input type="text" id="signatureFilter" placeholder="按名称过滤签章...">
+                        </div>
+                        <div class="pdf-signature-list" id="pdfSignatureList">
+                            <!-- 签章列表将通过JS动态生成 -->
+                        </div>
+                    </section>
+                    
+                    <section class="page-selector">
+                        <h3>盖章页面</h3>
+                        <div class="radio-group">
+                            <label><input type="radio" name="pageOption" value="current" checked> 当前页面</label>
+                            <label><input type="radio" name="pageOption" value="all"> 全部页面</label>
+                            <label><input type="radio" name="pageOption" value="custom"> 自定义页面</label>
+                        </div>
+                        <div class="custom-pages" id="customPages" style="display: none;">
+                            <input type="text" id="pageRange" placeholder="例如: 1,3-5">
+                        </div>
+                    </section>
+                    
+                    <section class="export-format-selector">
+                        <h3>导出格式</h3>
+                        <div class="radio-group">
+                            <label><input type="radio" name="exportFormat" value="pdf" checked> PDF格式</label>
+                            <label><input type="radio" name="exportFormat" value="png"> PNG格式</label>
+                            <label><input type="radio" name="exportFormat" value="jpg"> JPG格式</label>
+                        </div>
+                    </section>
+                    
+                    <section class="actions">
+                        <button id="savePdfBtn" class="primary-btn">导出</button>
+                        <button id="resetBtn" class="secondary-btn">重置</button>
+                    </section>
+                </aside>
+                
+                <!-- 右侧PDF预览区域 -->
+                <section class="pdf-preview">
+                    <div class="pdf-header">
+                        <div class="file-info">
+                            <span id="fileName">未选择文件</span>
+                            <span id="pageInfo">第 1 页 / 共 0 页</span>
+                        </div>
+                        <div class="page-controls">
+                            <button id="prevPage">上一页</button>
+                            <button id="nextPage">下一页</button>
+                        </div>
+                    </div>
+                    <div class="pdf-container" id="pdfContainer">
+                        <!-- PDF内容将通过JS渲染 -->
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <script src="../js/database-service.js"></script>
+    <script src="../js/signature-service.js"></script>
+    <script src="../js/pdf-service.js"></script>
+    <script>
+        // 全局变量
+        
+        // 渲染签章列表
+        function renderSignatureList(signatures, filter = '') {
+            const signatureList = document.getElementById('pdfSignatureList');
+            signatureList.innerHTML = '';
+            
+            // 过滤签章
+            let filteredSignatures = signatures;
+            if (filter) {
+                const filterLower = filter.toLowerCase();
+                filteredSignatures = signatures.filter(signature => 
+                    signature.name.toLowerCase().includes(filterLower)
+                );
+            }
+            
+            if (filteredSignatures.length === 0) {
+                if (filter) {
+                    signatureList.innerHTML = '<p class="pdf-empty-message">没有找到匹配的签章</p>';
+                } else {
+                    signatureList.innerHTML = '<p class="pdf-empty-message">暂无签章，请先添加</p>';
+                }
+                return;
+            }
+            
+            filteredSignatures.forEach(signature => {
+                const signatureItem = document.createElement('div');
+                signatureItem.className = 'pdf-signature-item';
+                signatureItem.dataset.signature = JSON.stringify(signature);
+                
+                signatureItem.innerHTML = `
+                    <img src="${signature.dataUrl}" alt="签章" class="pdf-signature-thumbnail">
+                    <div class="pdf-signature-info">
+                        <span class="pdf-signature-name">${signature.name}</span>
+                        <span class="pdf-signature-time">${new Date(signature.createdAt || Date.now()).toLocaleString()}</span>
+                    </div>
+                `;
+                
+                signatureItem.addEventListener('click', function() {
+                    // 移除其他选中状态
+                    document.querySelectorAll('.pdf-signature-item').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+                    // 添加选中状态
+                    this.classList.add('selected');
+                    
+                    // 获取选中的签章数据
+                    const signatureData = JSON.parse(this.dataset.signature);
+                    console.log('选中的签章数据:', signatureData);
+                    console.log('当前页面:', window.pdfService.currentPage);
+                    
+                    // 将签章添加到当前页面预览
+                    window.pdfService.addSignatureToPages(signatureData, [window.pdfService.currentPage])
+                        .then(() => {
+                            console.log('签章添加成功');
+                            console.log('当前页面签章:', window.pdfService.signatures[window.pdfService.currentPage - 1]);
+                        })
+                        .catch(err => {
+                            console.error('签章添加失败:', err);
+                        });
+                });
+                
+                signatureList.appendChild(signatureItem);
+            });
+        }
+        
+        // 解析页面范围
+        function parsePageRange(rangeStr, maxPages) {
+            const pages = [];
+            if (!rangeStr) return pages;
+            
+            const parts = rangeStr.split(',');
+            for (const part of parts) {
+                const trimmed = part.trim();
+                if (trimmed.includes('-')) {
+                    const [start, end] = trimmed.split('-').map(Number);
+                    const actualStart = Math.max(1, Math.min(start, maxPages));
+                    const actualEnd = Math.max(1, Math.min(end, maxPages));
+                    for (let i = actualStart; i <= actualEnd; i++) {
+                        pages.push(i);
+                    }
+                } else {
+                    const page = parseInt(trimmed);
+                    if (!isNaN(page) && page >= 1 && page <= maxPages) {
+                        pages.push(page);
+                    }
+                }
+            }
+            
+            return [...new Set(pages)].sort((a, b) => a - b);
+        }
+        
+        // 初始化去盖章功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查是否有PDF文件在localStorage中
+            const pdfData = localStorage.getItem('currentPdfDataUrl') || localStorage.getItem('pdfFile');
+            const pdfFileName = localStorage.getItem('originalPdfFileName') || localStorage.getItem('pdfFileName') || 'document';
+            
+            if (pdfData) {
+                // 初始化PDF服务
+                window.pdfService = new PdfService('pdfContainer', pdfData, pdfFileName);
+                window.pdfService.init();
+                
+                // 初始化签章服务
+                const signatureService = new SignatureService();
+                
+                // 加载签章列表
+                signatureService.loadSignatures().then(signatures => {
+                    renderSignatureList(signatures);
+                });
+                
+                // 保存当前PDF文件名
+                document.getElementById('fileName').textContent = pdfFileName;
+                
+                // 设置默认导出格式为PDF
+                let defaultFormat = 'pdf';
+                
+                // 设置默认选中的radio按钮
+                const formatRadios = document.querySelectorAll('input[name="exportFormat"]');
+                formatRadios.forEach(radio => {
+                    if (radio.value === defaultFormat) {
+                        radio.checked = true;
+                    }
+                });
+                
+                // 页面选项切换
+                const pageOptions = document.querySelectorAll('input[name="pageOption"]');
+                const customPagesDiv = document.getElementById('customPages');
+                
+                pageOptions.forEach(option => {
+                    option.addEventListener('change', function() {
+                        if (this.value === 'custom') {
+                            customPagesDiv.style.display = 'block';
+                        } else {
+                            customPagesDiv.style.display = 'none';
+                        }
+                    });
+                });
+                
+                // 添加签章按钮 - 触发文件上传
+                document.getElementById('addSignatureBtn').addEventListener('click', function() {
+                    document.getElementById('signatureFileInput').click();
+                });
+                
+                // 处理签章文件上传
+                document.getElementById('signatureFileInput').addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            const signatureDataUrl = event.target.result;
+                            // 创建新的签章并保存到标签管理
+                            const signatureName = file.name.replace(/\.[^/.]+$/, ""); // 去除文件扩展名
+                            
+                            const signature = {
+                                name: signatureName,
+                                dataUrl: signatureDataUrl,
+                                createdAt: Date.now()
+                            };
+                            
+                            // 使用SignatureService保存签章到标签管理
+                            signatureService.saveSignature(signature)
+                                .then(() => {
+                                    console.log('签章保存成功');
+                                    // 重新加载所有签章
+                                    return signatureService.loadSignatures();
+                                })
+                                .then(signatures => {
+                                    // 更新签章列表
+                                    const filterValue = document.getElementById('signatureFilter').value;
+                                    renderSignatureList(signatures, filterValue);
+                                    alert('签章添加成功并已保存到标签管理！');
+                                })
+                                .catch(err => {
+                                    console.error('保存签章失败:', err);
+                                    alert('保存签章失败，请重试！');
+                                });
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+                
+                // 签章名称过滤功能
+                document.getElementById('signatureFilter').addEventListener('input', function() {
+                    const filterValue = this.value;
+                    signatureService.loadSignatures()
+                        .then(signatures => {
+                            renderSignatureList(signatures, filterValue);
+                        })
+                        .catch(err => {
+                            console.error('加载签章失败:', err);
+                        });
+                });
+                
+                // PDF上传功能
+                document.getElementById('uploadPdfBtn').addEventListener('click', function() {
+                    document.getElementById('pdfFileInput').click();
+                });
+                
+                document.getElementById('pdfFileInput').addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            const pdfDataUrl = event.target.result;
+                            const pdfFileName = file.name;
+                            
+                            // 初始化PDF服务
+                            window.pdfService = new PdfService('pdfContainer', pdfDataUrl, pdfFileName);
+                            window.pdfService.init();
+                            
+                            // 保存到localStorage
+                            localStorage.setItem('currentPdfDataUrl', pdfDataUrl);
+                            localStorage.setItem('originalPdfFileName', pdfFileName);
+                            
+                            // 更新文件名显示
+                            document.getElementById('fileName').textContent = pdfFileName;
+                            
+                            alert('PDF文件上传成功！');
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+                
+                // 保存PDF按钮
+                document.getElementById('savePdfBtn').addEventListener('click', function() {
+                    // 检查pdfService是否已初始化
+                    if (!window.pdfService) {
+                        alert('PDF文档未加载，请先上传PDF文件！');
+                        return;
+                    }
+                    
+                    // 获取选中的签章 - 修复选择器
+                    const selectedSignature = document.querySelector('.pdf-signature-item.selected');
+                    if (!selectedSignature) {
+                        alert('请先选择一个签章！');
+                        return;
+                    }
+                    
+                    const signatureData = JSON.parse(selectedSignature.dataset.signature);
+                    
+                    // 获取选中的页面选项
+                    const pageOption = document.querySelector('input[name="pageOption"]:checked').value;
+                    let pages = [];
+                    
+                    if (pageOption === 'current') {
+                        pages = [window.pdfService.currentPage];
+                    } else if (pageOption === 'all') {
+                        for (let i = 1; i <= window.pdfService.totalPages; i++) {
+                            pages.push(i);
+                        }
+                    } else {
+                        const pageRange = document.getElementById('pageRange').value;
+                        pages = parsePageRange(pageRange, window.pdfService.totalPages);
+                        if (pages.length === 0) {
+                            alert('请输入有效的页面范围！');
+                            return;
+                        }
+                    }
+                    
+                    // 获取导出格式
+                const selectedFormatRadio = document.querySelector('input[name="exportFormat"]:checked');
+                const format = selectedFormatRadio ? selectedFormatRadio.value : 'pdf';
+                    
+                    // 执行盖章操作
+                    window.pdfService.addSignatureToPages(signatureData, pages).then(() => {
+                        // 导出PDF文件
+                        return window.pdfService.savePdf(format);
+                    }).then(() => {
+                        alert(`文档已成功导出为${format.toUpperCase()}格式！`);
+                    }).catch(error => {
+                        console.error('导出失败:', error);
+                        alert('导出失败，请重试！');
+                    });
+                });
+                
+                // 重置按钮
+                document.getElementById('resetBtn').addEventListener('click', function() {
+                    if (confirm('确定要重置所有更改吗？')) {
+                        window.pdfService.reset();
+                    }
+                });
+                
+                // 上一页/下一页按钮
+                document.getElementById('prevPage').addEventListener('click', function() {
+                    window.pdfService.goToPreviousPage();
+                });
+                
+                document.getElementById('nextPage').addEventListener('click', function() {
+                    window.pdfService.goToNextPage();
+                });
+                
+
+            // 添加键盘Delete键事件监听
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Delete' || e.key === 'Backspace') {
+                    // 阻止默认行为，防止在文本输入框中删除字符
+                    if (!['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+                        e.preventDefault();
+                        if (window.pdfService) {
+                            window.pdfService.deleteSelectedSignature();
+                        }
+                    }
+                }
+            });
+        } else {
+            alert('请先从首页上传PDF文件！');
+            window.location.href = 'index.html';
+        }
+        });
+        
+
+    </script>
+</body>
+</html>

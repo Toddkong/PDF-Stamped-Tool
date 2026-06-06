@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2024-01-01T00:00:00.000Z" agent="Mozilla/5.0" etag="abc123" version="21.6.5" type="device">
+  <diagram name="PDF盖章小工具流程图" id="diagram1">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- 系统标签 -->
+        <mxCell id="2" value="PDF盖章小工具系统流程图" style="shape=label;fillColor=none;strokeColor=none;whiteSpace=wrap;html=1;fontSize=24;fontColor=#333333;fontWeight=bold;" vertex="1" parent="1">
+          <mxGeometry x="350" y="10" width="300" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- 系统入口 -->
+        <mxCell id="3" value="用户访问系统" style="shape=ellipse;fillColor=#4CAF50;strokeColor=#2E7D32;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="100" width="150" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- 首页 -->
+        <mxCell id="4" value="首页
+(index.html)" style="shape=rectangle;fillColor=#2196F3;strokeColor=#1976D2;whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="230" width="150" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- 首页连接线 -->
+        <mxCell id="5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="3" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- PDF编辑器 -->
+        <mxCell id="6" value="PDF编辑器
+(pdf-editor.html)" style="shape=rectangle;fillColor=#FF9800;strokeColor=#F57C00;whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="230" width="180" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- PDF编辑器连接线 -->
+        <mxCell id="7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="4" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 签章管理 -->
+        <mxCell id="8" value="签章管理
+(signature-manager.html)" style="shape=rectangle;fillColor=#9C27B0;strokeColor=#7B1FA2;whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="650" y="230" width="180" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- 签章管理连接线 -->
+        <mxCell id="9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="4" target="8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- PDF上传 -->
+        <mxCell id="10" value="PDF上传" style="shape=rectangle;fillColor=#00BCD4;strokeColor=#0097A7;whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="370" width="150" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- PDF上传连接线 -->
+        <mxCell id="11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="6" target="10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- PDF服务 -->
+        <mxCell id="12" value="PDF服务
+(pdf-service.js)" style="shape=parallelogram;fillColor=#FFEB3B;strokeColor=#FBC02D;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="370" width="150" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- PDF服务连接线 -->
+        <mxCell id="13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="10" target="12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 签章选择 -->
+        <mxCell id="14" value="签章选择" style="shape=rectangle;fillColor=#00BCD4;strokeColor=#0097A7;whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="480" width="150" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- 签章选择连接线 -->
+        <mxCell id="15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="12" target="14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 签章服务 -->
+        <mxCell id="16" value="签章服务
+(signature-service.js)" style="shape=parallelogram;fillColor=#FFEB3B;strokeColor=#FBC02D;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="480" width="150" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- 签章服务连接线 -->
+        <mxCell id="17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="14" target="16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 盖章操作 -->
+        <mxCell id="18" value="盖章操作" style="shape=rectangle;fillColor=#00BCD4;strokeColor=#0097A7;whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="590" width="150" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- 盖章操作连接线 -->
+        <mxCell id="19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="16" target="18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 导出功能 -->
+        <mxCell id="20" value="导出功能" style="shape=rectangle;fillColor=#00BCD4;strokeColor=#0097A7;whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="700" width="150" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- 导出功能连接线 -->
+        <mxCell id="21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="18" target="20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 系统出口 -->
+        <mxCell id="22" value="完成操作" style="shape=ellipse;fillColor=#F44336;strokeColor=#D32F2F;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="810" width="150" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- 系统出口连接线 -->
+        <mxCell id="23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="20" target="22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 数据库服务 -->
+        <mxCell id="24" value="数据库服务
+(database-service.js)" style="shape=cylinder;fillColor=#4CAF50;strokeColor=#2E7D32;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="380" width="150" height="100" as="geometry" />
+        </mxCell>
+        
+        <!-- 数据库连接线1 -->
+        <mxCell id="25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="12" target="24">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 数据库连接线2 -->
+        <mxCell id="26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="16" target="24">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 签章添加 -->
+        <mxCell id="27" value="签章添加" style="shape=rectangle;fillColor=#8BC34A;strokeColor=#689F38;whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="650" y="550" width="150" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- 签章添加连接线 -->
+        <mxCell id="28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="8" target="27">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 签章添加到服务连接线 -->
+        <mxCell id="29" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="27" target="16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 签章列表 -->
+        <mxCell id="30" value="签章列表" style="shape=rectangle;fillColor=#8BC34A;strokeColor=#689F38;whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="650" y="670" width="150" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- 签章列表连接线 -->
+        <mxCell id="31" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="8" target="30">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 签章列表到服务连接线 -->
+        <mxCell id="32" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fillColor=none;" edge="1" parent="1" source="30" target="16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
