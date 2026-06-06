@@ -2,8 +2,6 @@
 
 A simple, secure, and privacy-focused PDF stamping tool that runs entirely in your browser.
 
-一个简单、安全、注重隐私的 PDF 盖章小工具，所有操作均在本地浏览器中完成。
-
 ## Features
 
 - **PDF Document Processing** - Upload, preview, and edit PDF files locally
