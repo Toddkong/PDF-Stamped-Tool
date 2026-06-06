@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>本地PDF盖章小工具</title>
-    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
         <!-- 顶栏 -->
@@ -12,8 +12,8 @@
             <a href="index.html" class="logo">PDF盖章小工具</a>
             <div class="nav-links">
                 <a href="index.html" class="nav-link">首页</a>
-                <a href="pdf-editor.html" class="nav-link">去盖章</a>
-                <a href="signature-manager.html" class="nav-link">管理签章</a>
+                <a href="pages/pdf-editor.html" class="nav-link">去盖章</a>
+                <a href="pages/signature-manager.html" class="nav-link">管理签章</a>
             </div>
         </div>
         
@@ -60,10 +60,10 @@
             <section class="quick-links">
                 <h2>快速导航</h2>
                 <div class="links-container">
-                    <a href="signature-manager.html" class="link-btn">
+                    <a href="pages/signature-manager.html" class="link-btn">
                         <span>⚙️ 管理签章</span>
                     </a>
-                    <a href="pdf-editor.html" class="link-btn">
+                    <a href="pages/pdf-editor.html" class="link-btn">
                         <span>✏️ 去盖章</span>
                     </a>
                 </div>
@@ -90,7 +90,7 @@
     </div>
     
     <!-- 引入数据库服务 -->
-    <script src="../js/database-service.js"></script>
+    <script src="js/database-service.js"></script>
     
     <script>
         // 监听文件选择
@@ -108,7 +108,7 @@
                     localStorage.setItem('originalPdfFileName', originalFileName);
                     
                     // 跳转到去盖章页面
-                    window.location.href = 'pdf-editor.html';
+                    window.location.href = 'pages/pdf-editor.html';
                 };
                 reader.readAsDataURL(file);
             }
